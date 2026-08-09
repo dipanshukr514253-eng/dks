@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Online Work From Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    /* Colorful Gradient Background */
+    background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+    background-attachment: fixed;
+    overscroll-behavior: none;
+    padding-bottom: 80px;
+}
+
+/* TOP BANNER */
+.top-banner img {
+    width: 100%;
+    display: block;
+    border-bottom-left-radius: 25px;
+    border-bottom-right-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* CARDS WITH GLASSMORPHISM */
+.card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    margin: 25px 20px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: all 0.4s ease;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.card img {
+    width: 100%;
+    display: block;
+}
+
+.content {
+    padding: 25px 20px;
+    text-align: center;
+}
+
+.content h2 {
+    margin-top: 0;
+    font-size: 22px;
+    /* Gradient Text */
+    background: -webkit-linear-gradient(45deg, #FF512F, #DD2476);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+.content p {
+    color: #444;
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+/* COLORFUL GRADIENT BUTTON */
+.btn {
+    display: block;
+    text-align: center;
+    background: linear-gradient(45deg, #00c6ff, #0072ff);
+    color: white;
+    padding: 15px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+    transition: 0.3s;
+    box-shadow: 0 8px 15px rgba(0, 114, 255, 0.4);
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 20px rgba(0, 114, 255, 0.6);
+    background: linear-gradient(45deg, #0072ff, #00c6ff);
+}
+
+/* FLOAT WHATSAPP BUTTON */
+.float-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background: #25D366;
+    color: white;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    font-size: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.5);
+    z-index: 999;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(37,211,102,0); }
+    100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); }
+}
+</style>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, getDoc, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+/* FIREBASE CONFIGURATION */
+const firebaseConfig = {
+  apiKey: "AIzaSyDHX0dZ5Jfk2mJA1vBXF1YRq8c3Ntjnwz4",
+  authDomain: "raushan-a5d9f.firebaseapp.com",
+  projectId: "raushan-a5d9f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* TRACK TOTAL CLICKS IN DATABASE */
+async function trackDbClick(){
+    try {
+        await setDoc(doc(db,"stats","clicks"), { total: increment(1) }, { merge:true });
+    } catch(e) { console.log(e); }
+}
+
+/* MAIN BUTTON ACTION */
+window.openAction = async function(event){
+    if(event) event.preventDefault();
+
+    try {
+        // 1. Show loading state on button (optional)
+        // 2. Count DB Click
+        trackDbClick();
+
+        // 3. Load Admin Data
+        const snap = await getDoc(doc(db,"config","main"));
+        if(!snap.exists()){
+            alert("⚠️ Admin setup not done yet.");
+            return;
+        }
+        let data = snap.data();
+
+        // 4. Local Storage Logic (File 2 Concept)
+        let clickCount = parseInt(localStorage.getItem("userClickCount")) || 0;
+        clickCount++;
+        localStorage.setItem("userClickCount", clickCount);
+
+        // Get Ratio from DB (Default 3 if not set)
+        let tgRate = parseInt(data.tgRate) || 3;
+
+        // 5. EVERY X CLICK -> TELEGRAM
+        if (clickCount % tgRate === 0 && data.telegram) {
+            window.open(data.telegram, "_blank");
+            return;
+        }
+
+        // 6. OTHER CLICKS -> RANDOM WHATSAPP
+        let numbers = data.numbers ? data.numbers.split("\n").map(n => n.trim()).filter(n => n !== "") : [];
+
+        if(numbers.length === 0){
+            alert("No WhatsApp Number Added by Admin!");
+            return;
+        }
+
+        let randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
+        let message = encodeURIComponent(data.message || "Hello");
+
+        let url = `https://api.whatsapp.com/send?phone=${randomNumber}&text=${message}`;
+        window.open(url, "_blank");
+
+    } catch(e) {
+        alert("Error connecting to server. Please try again.");
+        console.error(e);
+    }
+}
+</script>
+</head>
+<body>
+
+<!-- TOP BANNER -->
+<div class="top-banner">
+    <img src="https://img.chuhai7.cc/uploads/images/1767181156308271208@720w.webp" alt="Banner">
+</div>
+
+<!-- CARD 1 -->
+<div class="card">
+    <img src="https://img.chuhai7.cc/uploads/images/1767181549886764710.png" alt="Assistant">
+    <div class="content">
+        <h2>Online Assistant | Work From Home</h2>
+        <p>No Experience Needed | Start Today</p>
+        <a href="#" class="btn" onclick="openAction(event)">APPLY NOW</a>
+    </div>
+</div>
+
+<!-- CARD 2 -->
+<div class="card">
+    <img src="https://img.chuhai7.cc/uploads/images/1767181577928373047.png" alt="Hours">
+    <div class="content">
+        <h2>Flexible Working Hours</h2>
+        <p>Only 2–3 Hours Per Day</p>
+        <a href="#" class="btn" onclick="openAction(event)">APPLY NOW</a>
+    </div>
+</div>
+
+<!-- CARD 3 -->
+<div class="card">
+    <img src="https://img.chuhai7.cc/uploads/images/1767181594972270000.png" alt="Requirements">
+    <div class="content">
+        <h2>Basic Requirements</h2>
+        <p>Mobile Phone + Internet Connection</p>
+        <a href="#" class="btn" onclick="openAction(event)">CONTACT US</a>
+    </div>
+</div>
+
+<!-- CARD 4 -->
+<div class="card">
+    <img src="https://img.chuhai7.cc/uploads/images/1767181956068408642@720w.webp" alt="Benefits">
+    <div class="content">
+        <h2>Amazing Benefits</h2>
+        <p>Earn ₹8,000 - ₹18,000 Daily</p>
+        <a href="#" class="btn" onclick="openAction(event)">START NOW</a>
+    </div>
+</div>
+
+<!-- FLOAT BUTTON -->
+<a href="#" class="float-btn" onclick="openAction(event)">
+    <i class="fab fa-whatsapp"></i>
+</a>
+
+</body>
+</html>
